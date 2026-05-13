@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAppStore } from '../stores/appStore'
-import { normalizeUrl } from '../lib/urlUtils'
+import { normalizeUrl, isSupportedUrl } from '../lib/urlUtils'
 
 export default function UrlDropdown() {
   const { tabs, currentUrl, setCurrentUrl } = useAppStore()
@@ -52,7 +52,7 @@ export default function UrlDropdown() {
         <div className="url-dropdown-list">
           {uniqueTabs.length === 0 && (
             <div style={{ padding: '12px', color: 'var(--text-muted)', fontSize: 12, textAlign: 'center' }}>
-              No IGNOU pages open — visit ignou.ac.in
+              No supported pages open — visit ignou.ac.in, egyankosh.ac.in or swayam.gov.in
             </div>
           )}
           {uniqueTabs.map((tab) => {

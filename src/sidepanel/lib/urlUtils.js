@@ -21,11 +21,17 @@ export function isValidTabUrl(url) {
   return url.startsWith('http://') || url.startsWith('https://')
 }
 
-/** Chat rooms are restricted to IGNOU URLs for the beta */
-export function isIgnouUrl(url) {
+/** Supported platforms for the beta */
+const SUPPORTED_DOMAINS = ['ignou', 'egyankosh', 'swayam']
+
+export function isSupportedUrl(url) {
   if (!url) return false
-  return url.toLowerCase().includes('ignou')
+  const lower = url.toLowerCase()
+  return SUPPORTED_DOMAINS.some((d) => lower.includes(d))
 }
+
+/** @deprecated use isSupportedUrl */
+export const isIgnouUrl = isSupportedUrl
 
 /** Short human-readable label for a URL */
 export function shortUrl(rawUrl) {

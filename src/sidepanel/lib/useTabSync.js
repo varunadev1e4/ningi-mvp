@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAppStore } from '../stores/appStore'
-import { normalizeUrl, isValidTabUrl, isIgnouUrl } from './urlUtils'
+import { normalizeUrl, isValidTabUrl, isSupportedUrl } from './urlUtils'
 
 /**
  * Two responsibilities:
@@ -18,7 +18,7 @@ export function useTabSync() {
     const refreshList = () => {
       chrome.tabs.query({ currentWindow: true }, (chromeTabs) => {
         const valid = chromeTabs.filter(
-          (t) => isValidTabUrl(t.url) && isIgnouUrl(t.url)
+          (t) => isValidTabUrl(t.url) && isSupportedUrl(t.url)
         )
         setTabs(valid)
       })
@@ -29,7 +29,7 @@ export function useTabSync() {
       chrome.tabs.get(tabId, (tab) => {
         if (chrome.runtime.lastError) return  // tab may have closed
         refreshList()
-        if (tab.url && isValidTabUrl(tab.url) && isIgnouUrl(tab.url)) {
+        if (tab.url && isValidTabUrl(tab.url) && isSupportedUrl(tab.url)) {
           setCurrentUrl(normalizeUrl(tab.url))
         }
       })
@@ -41,7 +41,7 @@ export function useTabSync() {
       refreshList()
       // Also update currentUrl if this completed tab is the active IGNOU tab
       chrome.tabs.query({ active: true, currentWindow: true }, ([active]) => {
-        if (active?.id === tabId && isValidTabUrl(active.url) && isIgnouUrl(active.url)) {
+        if (active?.id === tabId && isValidTabUrl(active.url) && isSupportedUrl(active.url)) {
           setCurrentUrl(normalizeUrl(active.url))
         }
       })
@@ -52,7 +52,7 @@ export function useTabSync() {
     // Initial load
     chrome.tabs.query({ active: true, currentWindow: true }, ([active]) => {
       refreshList()
-      if (active && isValidTabUrl(active.url) && isIgnouUrl(active.url)) {
+      if (active && isValidTabUrl(active.url) && isSupportedUrl(active.url)) {
         setCurrentUrl(normalizeUrl(active.url))
       }
     })

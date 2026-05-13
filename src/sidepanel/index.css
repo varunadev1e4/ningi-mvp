@@ -1405,3 +1405,17 @@ input, textarea, button, select { font-family: inherit; }
   margin-top: 4px;
   opacity: 0.7;
 }
+
+/* ── Multiple site open-buttons row ── */
+.open-site-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.open-site-btns .open-ignou-btn {
+  flex: 1;
+  min-width: 90px;
+  font-size: 12px;
+  padding: 9px 10px;
+}

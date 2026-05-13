@@ -229,21 +229,18 @@ export default function ChatPage() {
           <div className="no-room-state">
             <div style={{ fontSize: 36 }}>🎓</div>
             <span style={{ color: 'var(--text-soft)', fontWeight: 800, fontSize: 15 }}>
-              No IGNOU tabs open
+              No supported tabs open
             </span>
             <span style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.7 }}>
-              Ningi is live on IGNOU pages.
-              <br />Open an IGNOU page to start chatting.
+              Ningi works on IGNOU, eGyankosh and SWAYAM.
+              <br />Open one of these pages to start chatting.
             </span>
-            <button
-              className="open-ignou-btn"
-              onClick={() => chrome.tabs.create({ url: 'https://www.ignou.ac.in' })}
-            >
-              Open ignou.ac.in ↗
-            </button>
-            <div className="coming-soon-note">
-              🌐 Coming soon to more websites
+            <div className="open-site-btns">
+              <button className="open-ignou-btn" onClick={() => chrome.tabs.create({ url: 'https://www.ignou.ac.in' })}>IGNOU ↗</button>
+              <button className="open-ignou-btn" onClick={() => chrome.tabs.create({ url: 'https://egyankosh.ac.in' })}>eGyankosh ↗</button>
+              <button className="open-ignou-btn" onClick={() => chrome.tabs.create({ url: 'https://swayam.gov.in' })}>SWAYAM ↗</button>
             </div>
+            <div className="coming-soon-note">🌐 Coming soon to more websites</div>
           </div>
         )}
 
