@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
 import UserAvatar from './UserAvatar'
@@ -18,22 +18,8 @@ function truncate(str, n) {
 export default function MessageBubble({ message, reactions = {}, onReply, onDelete, onReact }) {
   const { user } = useAuthStore()
   const { openProfile } = useAppStore()
-  const [showPicker, setShowPicker]   = useState(false)
-  const [showActions, setShowActions] = useState(false)
-  const pickerRef = useRef(null)
+  const [hovered, setHovered] = useState(false)
   const isOwn = message.user_id === user?.id
-
-  // Close picker on outside click
-  useEffect(() => {
-    if (!showPicker) return
-    const handler = (e) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
-        setShowPicker(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [showPicker])
 
   if (message.is_deleted) {
     return (
@@ -45,7 +31,7 @@ export default function MessageBubble({ message, reactions = {}, onReply, onDele
     )
   }
 
-  // Group reactions by emoji
+  // Group reactions: { emoji → [reaction, ...] }
   const reactionGroups = {}
   for (const r of Object.values(reactions)) {
     if (!reactionGroups[r.emoji]) reactionGroups[r.emoji] = []
@@ -59,19 +45,15 @@ export default function MessageBubble({ message, reactions = {}, onReply, onDele
     if (!isOwn) openProfile({ id: message.user_id, username: message.username })
   }
 
-  const handleReact = (emoji) => {
-    setShowPicker(false)
-    setShowActions(false)
-    onReact?.(message.id, emoji)
-  }
-
   return (
     <div
       className={`msg-row${isOwn ? ' own' : ''}`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => { if (!showPicker) setShowActions(false) }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {!isOwn && <UserAvatar username={message.username} size={28} onClick={handleAvatarClick} />}
+      {!isOwn && (
+        <UserAvatar username={message.username} size={28} onClick={handleAvatarClick} />
+      )}
 
       <div className="msg-body">
         {/* Name + time */}
@@ -96,47 +78,48 @@ export default function MessageBubble({ message, reactions = {}, onReply, onDele
         )}
 
         {/* Bubble */}
-        <div className="bubble-wrap">
-          <div className={`msg-bubble${isOwn ? ' own' : ''}`}>
-            {message.content}
-          </div>
+        <div className={`msg-bubble${isOwn ? ' own' : ''}`}>
+          {message.content}
+        </div>
 
-          {/* Action bar — controlled by React state, not CSS :hover */}
-          {(showActions || showPicker) && (
-            <div className={`msg-actions${isOwn ? ' own' : ''}`}>
-              {/* React button + picker */}
-              <div ref={pickerRef} style={{ position: 'relative' }}>
-                <button
-                  className={`msg-action-btn${showPicker ? ' active' : ''}`}
-                  onMouseDown={(e) => { e.stopPropagation(); setShowPicker((v) => !v) }}
-                  title="React"
-                >😊</button>
+        {/* Inline action bar — slides in below bubble on hover, no absolute positioning */}
+        <div className={`msg-action-row${hovered ? ' visible' : ''}${isOwn ? ' own' : ''}`}>
+          {/* Quick emoji reactions */}
+          {QUICK_EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              className={`msg-emoji-btn${myReactions.has(emoji) ? ' active' : ''}`}
+              onMouseDown={(e) => { e.preventDefault(); onReact?.(message.id, emoji) }}
+              title={emoji}
+            >
+              {emoji}
+            </button>
+          ))}
 
-                {showPicker && (
-                  <div className={`emoji-picker${isOwn ? ' own' : ''}`}>
-                    {QUICK_EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        className={`emoji-pick-btn${myReactions.has(emoji) ? ' active' : ''}`}
-                        onMouseDown={(e) => { e.stopPropagation(); handleReact(emoji) }}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+          <div className="msg-action-sep" />
 
-              <button className="msg-action-btn" onMouseDown={() => { onReply?.(message); setShowActions(false) }} title="Reply">↩</button>
+          {/* Reply */}
+          <button
+            className="msg-action-btn"
+            onMouseDown={(e) => { e.preventDefault(); onReply?.(message) }}
+            title="Reply"
+          >
+            ↩
+          </button>
 
-              {isOwn && (
-                <button className="msg-action-btn danger" onMouseDown={() => onDelete?.(message.id)} title="Delete">🗑</button>
-              )}
-            </div>
+          {/* Delete (own messages only) */}
+          {isOwn && (
+            <button
+              className="msg-action-btn danger"
+              onMouseDown={(e) => { e.preventDefault(); onDelete?.(message.id) }}
+              title="Delete"
+            >
+              🗑
+            </button>
           )}
         </div>
 
-        {/* Reaction chips */}
+        {/* Reaction chips — always visible when reactions exist */}
         {Object.keys(reactionGroups).length > 0 && (
           <div className={`reactions-row${isOwn ? ' own' : ''}`}>
             {Object.entries(reactionGroups).map(([emoji, rs]) => (

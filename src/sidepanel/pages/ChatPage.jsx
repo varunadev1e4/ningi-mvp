@@ -18,7 +18,7 @@ export default function ChatPage() {
   const [replyingTo, setReplyingTo] = useState(null)
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState(null)
-  const [retryKey, setRetryKey]     = useState(0)  // only for the manual Retry button
+  const [retryKey, setRetryKey]     = useState(0)
   const [modError, setModError]       = useState(null)
 
   const bottomRef  = useRef(null)
@@ -30,12 +30,6 @@ export default function ChatPage() {
     return () => { mountedRef.current = false }
   }, [])
 
-  // Re-fetch when app comes back from idle (visibilitychange → App.jsx → this event)
-  useEffect(() => {
-    const handler = () => setRetryKey((k) => k + 1)
-    window.addEventListener('ningi:reconnect', handler)
-    return () => window.removeEventListener('ningi:reconnect', handler)
-  }, [])
 
   useEffect(() => {
     if (!currentUrl) {
@@ -57,20 +51,41 @@ export default function ChatPage() {
 
     let cancelled = false
     let firstSubscription = true
+    let initialLoaded = false   // after first successful load, re-fetches are silent
 
     // ── Fetch messages + reactions ─────────────────────────────
-    const fetchAll = async () => {
-      const { data: msgs, error: msgErr } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('room_url', currentUrl)
-        .order('created_at', { ascending: true })
-        .limit(150)
+    const fetchAll = async ({ silent = false } = {}) => {
+      if (!initialLoaded) setLoading(true)
+
+      // Auto-retry up to 3 times with growing delays.
+      // Handles Chrome blocking network briefly after window-switch.
+      let msgs = null
+      let lastErr = null
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 2000))
+        if (cancelled || !mountedRef.current) return
+        try {
+          const result = await Promise.race([
+            supabase.from('messages').select('*')
+              .eq('room_url', currentUrl)
+              .order('created_at', { ascending: true })
+              .limit(150),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))
+          ])
+          if (result.error) throw result.error
+          msgs = result.data
+          lastErr = null
+          break
+        } catch (e) {
+          lastErr = e
+        }
+      }
 
       if (cancelled || !mountedRef.current) return
 
-      if (msgErr) {
-        setError('Failed to load messages. Tap retry.')
+      if (lastErr) {
+        if (silent) { window.location.reload(); return }
+        setError('Could not load messages. Tap retry.')
         setLoading(false)
         return
       }
@@ -78,6 +93,7 @@ export default function ChatPage() {
       const msgList = msgs || []
       setMessages(msgList)
       setLoading(false)
+        initialLoaded = true
 
       if (msgList.length === 0) return
 

@@ -7,9 +7,12 @@
   "permissions": [
     "sidePanel",
     "tabs",
-    "activeTab"
+    "activeTab",
+    "identity"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "src/background/index.js",
     "type": "module"
@@ -29,5 +32,6 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzBTFzZz7fGFjoQ5gO4B/O19Spr+s72aIEmJwk7ijQJv79k1/ch6PKAIawulUH0UVA7rqUQFS2nvOxhl7el0CG2vutjqidPEhfk5bkR2aiHHWSxASKmRsveetHO89zR6tYiBWzY5Ss8WP/MiDeWWyOMmBykej/y2txdEB1QHplRgNAUGmrJW4M93CTa+/misj9R2uAag1UctK99K1JUppgxiaK4ZjyD5x51SHn4zzoRWc+Lp33bVloaRaCYXekAWl3+ArkcdAHg7zjflTbSyZ41vqEksSBNdzkaJJr4xCcRHDuQE/Eu/w6I3HcZobwAcSuActA7uTj/LzhOO+6pXfawIDAQAB"
 }

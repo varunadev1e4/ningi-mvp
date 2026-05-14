@@ -8,7 +8,9 @@ export default function Header() {
   const { totalUnread, openInbox, openFeedback, openProfile, _currentUserId } = useAppStore()
 
   const handleOwnProfile = () => {
-    if (profile) openProfile({ id: _currentUserId, username: profile.username })
+    if (profile && _currentUserId) {
+      openProfile({ id: _currentUserId, username: profile.username })
+    }
   }
 
   return (

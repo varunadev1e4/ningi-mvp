@@ -919,77 +919,76 @@ input, textarea, button, select { font-family: inherit; }
   50% { opacity: 0.2; }
 }
 
-/* ── Message hover actions ── */
-.bubble-wrap {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-}
-.msg-row.own .bubble-wrap { justify-content: flex-end; }
-
-/* Action bar — shown via React state (showActions/showPicker), not CSS :hover.
-   Positioned to the side of the bubble so it never overlaps or gets clipped. */
-.msg-actions {
+/* ── Message action row (inline, below bubble, no absolute positioning) ── */
+.msg-action-row {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height 0.15s ease, opacity 0.12s ease, margin-top 0.15s ease;
   background: var(--surface2);
   border: 1px solid var(--border-hover);
   border-radius: 20px;
-  padding: 3px 5px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-  margin-left: 6px;
-  flex-shrink: 0;
-  align-self: center;
+  padding: 0 5px;
+  width: fit-content;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  margin-top: 0;
 }
-/* For own messages, action bar goes to the LEFT of the bubble */
-.msg-row.own .bubble-wrap { flex-direction: row-reverse; }
-.msg-actions.own { margin-left: 0; margin-right: 6px; }
+.msg-action-row.visible {
+  max-height: 34px;
+  opacity: 1;
+  pointer-events: all;
+  margin-top: 5px;
+  padding: 3px 5px;
+}
+.msg-action-row.own { align-self: flex-end; }
+
+.msg-emoji-btn {
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  line-height: 1;
+  transition: transform 0.1s, background 0.1s;
+  opacity: 0.75;
+}
+.msg-emoji-btn:hover { transform: scale(1.25); opacity: 1; }
+.msg-emoji-btn.active {
+  background: var(--primary-dim);
+  opacity: 1;
+  border-radius: 6px;
+}
+
+.msg-action-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border-hover);
+  margin: 0 3px;
+  flex-shrink: 0;
+}
 
 .msg-action-btn {
   background: transparent;
   border: none;
   cursor: pointer;
   font-size: 13px;
-  padding: 4px 6px;
+  padding: 3px 6px;
   border-radius: 6px;
   line-height: 1;
-  transition: background 0.1s;
   color: var(--text-soft);
+  transition: background 0.1s;
 }
-.msg-action-btn:hover { background: var(--surface3); }
-.msg-action-btn.active { background: var(--primary-dim); color: var(--primary); }
+.msg-action-btn:hover { background: var(--surface3); color: var(--text); }
 .msg-action-btn.danger:hover { background: rgba(255,61,0,0.15); }
 
-/* ── Emoji picker — drops DOWN from the 😊 button, no overflow issues ── */
-.emoji-picker {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  background: var(--surface2);
-  border: 1px solid var(--border-hover);
-  border-radius: 12px;
-  padding: 6px 8px;
-  display: flex;
-  gap: 4px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  z-index: 50;
-  white-space: nowrap;
-}
-.emoji-picker.own { left: auto; right: 0; }
-
-.emoji-pick-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  font-size: 18px;
-  padding: 4px 5px;
-  cursor: pointer;
-  transition: all 0.1s;
-  line-height: 1;
-}
-.emoji-pick-btn:hover { background: var(--surface3); transform: scale(1.2); }
-.emoji-pick-btn.active { background: var(--primary-dim); border-color: var(--primary); }
+/* bubble-wrap no longer needs special positioning */
+.bubble-wrap { display: flex; }
+.msg-row.own .bubble-wrap { justify-content: flex-end; }
 
 /* ── Reaction chips ── */
 .reactions-row {
@@ -1418,4 +1417,181 @@ input, textarea, button, select { font-family: inherit; }
   min-width: 90px;
   font-size: 12px;
   padding: 9px 10px;
+}
+
+/* ── Google sign-in button ── */
+.google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px;
+  background: #fff;
+  border: 1px solid #dadce0;
+  border-radius: var(--radius-sm);
+  color: #3c4043;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+.google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Divider between Google and email form ── */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 4px 0;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.auth-divider span {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Google setup helper ── */
+.google-setup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: -4px;
+}
+.google-setup-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.google-setup-toggle {
+  font-size: 11px;
+  color: var(--sky-mid);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0;
+}
+.google-setup-toggle:hover { text-decoration: underline; }
+.google-setup-box {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.google-setup-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+}
+.google-setup-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.google-setup-hint code {
+  font-size: 10px;
+  background: var(--surface2);
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: var(--text-soft);
+}
+.google-setup-url {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border-hover);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 10px;
+  color: var(--sky-light);
+  word-break: break-all;
+  cursor: pointer;
+}
+.google-setup-copy {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  background: var(--surface3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.google-setup-url:hover .google-setup-copy { color: var(--text); }
+
+/* ── Soft connection warning (reconnect failed, input still usable) ── */
+.conn-warn-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px;
+  background: rgba(234,179,8,0.08);
+  border-top: 1px solid rgba(234,179,8,0.2);
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #ca8a04;
+  gap: 10px;
+}
+.conn-warn-banner button {
+  background: rgba(234,179,8,0.15);
+  border: 1px solid rgba(234,179,8,0.3);
+  border-radius: 6px;
+  color: #ca8a04;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.conn-warn-banner button:hover { background: rgba(234,179,8,0.25); }
+
+/* ── Reconnecting screen ── */
+.reconnecting-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--bg);
+}
+
+.reconnecting-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--surface3);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.reconnecting-text {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-soft);
+}
+.reconnecting-sub {
+  font-size: 12px;
+  color: var(--text-muted);
 }

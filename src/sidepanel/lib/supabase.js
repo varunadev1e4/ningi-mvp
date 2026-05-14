@@ -10,6 +10,10 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    flowType: 'implicit'   // Required for Chrome extensions — PKCE needs localStorage
+                           // shared between contexts which extensions don't support
+  },
   realtime: {
     params: {
       eventsPerSecond: 10

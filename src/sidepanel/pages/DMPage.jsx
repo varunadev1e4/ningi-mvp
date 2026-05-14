@@ -31,12 +31,6 @@ export default function DMPage() {
     return () => { mountedRef.current = false }
   }, [])
 
-  // Re-fetch when app comes back from idle
-  useEffect(() => {
-    const handler = () => setRetryKey((k) => k + 1)
-    window.addEventListener('ningi:reconnect', handler)
-    return () => window.removeEventListener('ningi:reconnect', handler)
-  }, [])
 
   useEffect(() => {
     if (!cid) return
@@ -53,19 +47,38 @@ export default function DMPage() {
 
     let cancelled = false
     let firstSubscription = true
+    let initialLoaded = false
 
-    const fetchMessages = async () => {
-      const { data, error: err } = await supabase
-        .from('direct_messages')
-        .select('*')
-        .eq('conversation_id', cid)
-        .order('created_at', { ascending: true })
-        .limit(150)
+    const fetchMessages = async ({ silent = false } = {}) => {
+      if (!initialLoaded) setLoading(true)
+
+      let data = null
+      let lastErr = null
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 2000))
+        if (cancelled || !mountedRef.current) return
+        try {
+          const result = await Promise.race([
+            supabase.from('direct_messages').select('*')
+              .eq('conversation_id', cid)
+              .order('created_at', { ascending: true })
+              .limit(150),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))
+          ])
+          if (result.error) throw result.error
+          data = result.data
+          lastErr = null
+          break
+        } catch (e) {
+          lastErr = e
+        }
+      }
 
       if (cancelled || !mountedRef.current) return
-      if (err) { setError('Failed to load. Tap retry.'); setLoading(false); return }
+      if (lastErr) { if (silent) { window.location.reload(); return } setError('Could not load messages. Tap retry.'); setLoading(false); return }
       setMessages(data || [])
       setLoading(false)
+        initialLoaded = true
     }
 
     fetchMessages()
