@@ -11,6 +11,8 @@ import InboxPage from './pages/InboxPage'
 import FeedbackPage from './pages/FeedbackPage'
 import ProfilePage from './pages/ProfilePage'
 import CollectionsPage from './pages/CollectionsPage'
+import GroupsListPage from './pages/GroupsListPage'
+import GroupPage from './pages/GroupPage'
 
 export default function App() {
   const { user, profile, loading, init } = useAuthStore()
@@ -140,6 +142,8 @@ export default function App() {
       {view === 'feedback'    && <FeedbackPage />}
       {view === 'profile'     && <ProfilePage />}
       {view === 'collections' && <CollectionsPage />}
+      {view === 'groups'      && <GroupsListPage />}
+      {view === 'group-chat'  && <GroupPage />}
     </div>
   )
 }

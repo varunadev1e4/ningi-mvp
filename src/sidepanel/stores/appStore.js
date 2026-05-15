@@ -1,20 +1,22 @@
 import { create } from 'zustand'
 
 export const useAppStore = create((set, get) => ({
-  // 'chat' | 'dm' | 'inbox' | 'feedback' | 'profile'
-  view: 'chat',
+  view: 'chat',   // 'chat'|'dm'|'inbox'|'feedback'|'profile'|'collections'|'groups'|'group-chat'
   dmUser: null,
-  profileUser: null,   // { id, username, email, created_at }
+  profileUser: null,
+  currentGroup: null,
   currentUrl: '',
   tabs: [],
   unreadDMs: {},
   totalUnread: 0,
+  pendingFriendRequests: 0,
   _currentUserId: null,
 
   setCurrentUserId: (id) => set({ _currentUserId: id }),
   setView: (view) => set({ view }),
   setCurrentUrl: (url) => set({ currentUrl: url }),
   setTabs: (tabs) => set({ tabs }),
+  setPendingFriendRequests: (n) => set({ pendingFriendRequests: n }),
 
   openDM: (user) => {
     const myId = get()._currentUserId
@@ -29,6 +31,9 @@ export const useAppStore = create((set, get) => ({
   closeInbox:    () => set({ view: 'chat' }),
   openFeedback:  () => set({ view: 'feedback' }),
   closeFeedback: () => set({ view: 'chat' }),
+  openGroups:    () => set({ view: 'groups', currentGroup: null }),
+  openGroup:     (group) => set({ view: 'group-chat', currentGroup: group }),
+  closeGroup:    () => set({ view: 'groups', currentGroup: null }),
 
   openProfile: (user) => set({ view: 'profile', profileUser: user }),
   closeProfile: () => set({ view: 'chat', profileUser: null }),
