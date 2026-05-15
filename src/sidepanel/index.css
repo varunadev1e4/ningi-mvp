@@ -4,26 +4,56 @@
   padding: 0;
 }
 
+/* ═══════════════════════════════════════════════
+   NINGI BRAND TOKENS
+   Primary:  #FF3D00 (Orange / Spark)
+   Gradient: #06558D → #D6EAF2 (Sky)
+   Type:     Nunito Sans (secondary)
+═══════════════════════════════════════════════ */
+
 :root {
-  --bg: #07111f;
-  --surface: #0d1b2e;
-  --surface2: #122237;
-  --surface3: #182d47;
-  --border: rgba(255,255,255,0.07);
-  --border-hover: rgba(255,255,255,0.14);
-  --primary: #FF3D00;
-  --primary-dim: rgba(255,61,0,0.12);
-  --primary-glow: rgba(255,61,0,0.25);
-  --sky: #06558D;
-  --sky-mid: #1a7fc1;
-  --sky-light: #D6EAF2;
-  --text: #dce8f5;
-  --text-soft: #8aaecf;
-  --text-muted: #4d6b88;
+  /* ── Radius & layout ── */
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 16px;
   --panel-width: 360px;
+
+  /* ── Brand ── */
+  --primary: #FF3D00;
+  --primary-dim: rgba(255,61,0,0.10);
+  --primary-glow: rgba(255,61,0,0.22);
+  --sky: #06558D;
+  --sky-mid: #1a7fc1;
+  --sky-light: #D6EAF2;
+  --sky-gradient: linear-gradient(160deg, #06558D 0%, #D6EAF2 100%);
+
+  /* ── LIGHT THEME (default) ── */
+  --bg: #FFFFFF;
+  --surface: #F5F5F7;
+  --surface2: #EBEBED;
+  --surface3: #E0E0E3;
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.16);
+  --text: #0A0A0B;
+  --text-soft: #444446;
+  --text-muted: #88888A;
+  --text-on-primary: #FFFFFF;
+  --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+}
+
+/* ── DARK THEME ── */
+html.dark {
+  --bg: #0A0A0B;
+  --surface: #131415;
+  --surface2: #1A1B1D;
+  --surface3: #222325;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.14);
+  --text: #F0F0F2;
+  --text-soft: #AAAAAC;
+  --text-muted: #66666A;
+  --text-on-primary: #FFFFFF;
+  --shadow: 0 1px 4px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.3);
 }
 
 html, body, #root {
@@ -39,6 +69,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
 }
 
 /* ── Scrollbar ── */
@@ -185,23 +216,27 @@ input, textarea, button, select { font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 0 16px;
+  height: 52px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   background: var(--bg);
+  gap: 12px;
 }
 
+/* ── Logo ── */
 .header-logo {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .header-logo-mark {
-  width: 26px;
-  height: 26px;
-  background: var(--primary);
-  border-radius: 7px;
+  width: 28px;
+  height: 28px;
+  background: var(--sky-gradient);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,44 +247,172 @@ input, textarea, button, select { font-family: inherit; }
 }
 
 .header-logo-text {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 900;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.6px;
   color: var(--text);
 }
 
+/* ── Actions ── */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
-.header-user {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.header-username {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-soft);
-}
-
-.btn-icon {
-  width: 30px;
-  height: 30px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+/* Generic icon button — smaller, no border by default */
+.header-icon-btn {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-soft);
-  font-size: 14px;
-  transition: all 0.15s;
+  color: var(--text-muted);
+  transition: background 0.12s, color 0.12s;
   flex-shrink: 0;
+  position: relative;
+}
+.header-icon-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+/* Unread badge on inbox */
+.header-badge {
+  position: absolute;
+  top: 3px; right: 3px;
+  min-width: 14px; height: 14px;
+  padding: 0 3px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ── Avatar button ── */
+.header-profile-wrap { position: relative; }
+
+.header-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px 3px 3px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.header-avatar-btn:hover,
+.header-avatar-btn.open {
+  background: var(--surface2);
+  border-color: var(--border);
+}
+
+.header-chevron {
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.header-avatar-btn.open .header-chevron {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown menu ── */
+.header-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 210px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
+  z-index: 200;
+  overflow: hidden;
+  animation: menu-in 0.15s ease;
+}
+html.dark .header-menu {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);
+}
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.header-menu-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 12px;
+}
+.header-menu-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.header-menu-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.header-menu-handle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.header-menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+.header-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+.header-menu-item:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.header-menu-item--danger { color: var(--text-muted); }
+.header-menu-item--danger:hover {
+  background: rgba(255, 61, 0, 0.06);
+  color: var(--primary);
+}
+
+/* Keep old .btn-icon for any lingering usages */
+.btn-icon {
+  width: 30px; height: 30px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-soft); font-size: 14px;
+  transition: all 0.15s; flex-shrink: 0;
 }
 .btn-icon:hover { background: var(--surface3); color: var(--text); border-color: var(--border-hover); }
 
@@ -1981,3 +2144,200 @@ input, textarea, button, select { font-family: inherit; }
   flex-shrink: 0;
 }
 .timeout-banner strong { font-weight: 600; color: #fbbf24; }
+
+/* ═══════════════════════════════════════════════
+   BRAND ENHANCEMENTS — applied on top of existing styles
+═══════════════════════════════════════════════ */
+
+/* ── Smooth theme transitions ── */
+*, *::before, *::after {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+/* Exclude transitions that would feel laggy */
+.message-list, .msg-bubble, input, textarea, button svg,
+.url-dropdown-list, .coll-list { transition: none; }
+
+/* ── Logo mark: sky gradient in both themes ── */
+.header-logo-mark,
+.auth-logo-mark {
+  background: var(--sky-gradient) !important;
+  color: #fff !important;
+}
+
+/* ── Auth page: sky gradient header band ── */
+html.light .auth-page {
+  background: var(--bg);
+}
+html.light .auth-logo-mark {
+  box-shadow: 0 4px 16px rgba(6,85,141,0.25);
+}
+
+/* Header refinements */
+html.light .header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+html.light .header-logo-text {
+  color: #0A0A0B;
+}
+
+/* URL bar light mode */
+html.light .url-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+html.light .url-select-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+html.light .url-dropdown-list {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+html.light .url-dropdown-item:hover { background: var(--surface); }
+html.light .url-dropdown-item.selected { background: var(--primary-dim); }
+
+/* Message bubbles light mode */
+html.light .msg-bubble {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+html.light .msg-bubble.own {
+  background: var(--primary);
+  color: #fff;
+  border-color: transparent;
+}
+html.light .msg-row .msg-name { color: var(--sky); }
+
+/* Input area light mode */
+html.light .message-input-wrap {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+html.light .message-input {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+html.light .message-input:focus { border-color: var(--primary); }
+
+/* Auth card light mode */
+html.light .auth-card,
+html.light .auth-tabs {
+  background: var(--surface);
+}
+html.light .auth-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+html.light .auth-input:focus { border-color: var(--primary); }
+
+/* Profile light mode */
+html.light .profile-hero { background: var(--surface); }
+html.light .profile-card { background: var(--bg); border: 1px solid var(--border); }
+html.light .profile-edit-card { background: var(--surface); border: 1px solid var(--border); }
+
+/* Collections light mode */
+html.light .collections-page { background: var(--bg); }
+html.light .coll-item { border-bottom: 1px solid var(--border); }
+html.light .coll-item:hover { background: var(--surface); }
+html.light .coll-item__favicon-wrap { background: var(--surface2); }
+html.light .coll-header { border-bottom: 1px solid var(--border); }
+
+/* Report modal light mode */
+html.light .report-modal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+html.light .report-reason-btn { background: var(--surface); border-color: transparent; }
+html.light .report-reason-btn:hover { background: var(--surface2); }
+html.light .report-modal__details { background: var(--surface); border-color: var(--border); }
+
+/* Error/mod banners light mode */
+html.light .error-banner {
+  background: rgba(255,61,0,0.06);
+  border-color: rgba(255,61,0,0.2);
+  color: var(--primary);
+}
+
+/* DM list light mode */
+html.light .dm-header { background: var(--bg); border-bottom: 1px solid var(--border); }
+html.light .message-list { background: var(--bg); }
+
+/* Sky gradient accent bar at top of auth page */
+.auth-sky-bar {
+  height: 4px;
+  background: var(--sky-gradient);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  margin: -28px -24px 24px;
+}
+
+/* Beta chip brand update */
+.beta-chip {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--primary-dim);
+  color: var(--primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── Theme toggle button ── */
+.theme-toggle-btn {
+  color: var(--text-muted) !important;
+}
+.theme-toggle-btn:hover {
+  color: var(--primary) !important;
+  border-color: var(--primary-dim) !important;
+}
+
+/* ── Primary button brand style ── */
+.auth-submit-btn,
+.profile-dm-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.auth-submit-btn:hover,
+.profile-dm-btn:hover { opacity: 0.88; }
+
+/* Profile actions buttons light mode */
+html.light .profile-collections-btn,
+html.light .profile-action-btn {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+html.light .profile-collections-btn:hover,
+html.light .profile-action-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Feedback page light mode */
+html.light .feedback-page { background: var(--bg); }
+
+/* Scrollbar light mode */
+html.light ::-webkit-scrollbar-thumb { background: var(--surface3); }
+
+/* Light mode inline action buttons on messages */
+html.light .msg-action-btn { background: var(--surface); color: var(--text-soft); }
+html.light .msg-action-btn:hover { background: var(--surface2); color: var(--text); }
+html.light .msg-emoji-btn { background: var(--surface); }
+html.light .msg-emoji-btn:hover { background: var(--surface2); }
+
+/* Settings toggle light mode */
+html.light .settings-toggle--off {
+  border-color: var(--border);
+  color: var(--text-muted);
+}

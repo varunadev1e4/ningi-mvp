@@ -3,6 +3,7 @@ import { useAuthStore } from './stores/authStore'
 import { useAppStore } from './stores/appStore'
 import { supabase } from './lib/supabase'
 import { useTabSync } from './lib/useTabSync'
+import { useThemeStore } from './stores/themeStore'
 import AuthPage from './pages/AuthPage'
 import ChatPage from './pages/ChatPage'
 import DMPage from './pages/DMPage'
@@ -18,8 +19,9 @@ export default function App() {
   const reloadTimerRef  = useRef(null)
   const [reconnecting, setReconnecting] = useState(false)
 
+  const { initTheme } = useThemeStore()
   useTabSync()
-  useEffect(() => { init() }, [])
+  useEffect(() => { init(); initTheme() }, [])
 
   // ── Global reconnect handler ─────────────────────────────────
   // Lives here so it works regardless of which page is currently open.

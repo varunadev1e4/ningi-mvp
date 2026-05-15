@@ -23,6 +23,7 @@ export default function DMPage() {
   const [modError, setModError]       = useState(null)
   const [reportMsg, setReportMsg]     = useState(null)
   const [timeoutInfo, setTimeoutInfo] = useState(null)
+  const [reactions, setReactions]     = useState({}) // { msgId: { reactionKey: {emoji,user_id,username} } }
 
   const bottomRef  = useRef(null)
   const channelRef = useRef(null)
@@ -47,6 +48,7 @@ export default function DMPage() {
     setLoading(true)
     setError(null)
     setReplyingTo(null)
+    setReactions({})
 
     let cancelled = false
     let firstSubscription = true
@@ -96,6 +98,23 @@ export default function DMPage() {
         if (!mountedRef.current) return
         setMessages((prev) => prev.map((m) => m.id === payload.id ? { ...m, is_deleted: true } : m))
       })
+      .on('broadcast', { event: 'react_dm' }, ({ payload }) => {
+        if (!mountedRef.current) return
+        const { msgId, key, emoji, user_id, username } = payload
+        setReactions(prev => ({
+          ...prev,
+          [msgId]: { ...(prev[msgId] || {}), [key]: { emoji, user_id, username } }
+        }))
+      })
+      .on('broadcast', { event: 'unreact_dm' }, ({ payload }) => {
+        if (!mountedRef.current) return
+        const { msgId, key } = payload
+        setReactions(prev => {
+          const msgReactions = { ...(prev[msgId] || {}) }
+          delete msgReactions[key]
+          return { ...prev, [msgId]: msgReactions }
+        })
+      })
       .subscribe((status) => {
         if (!mountedRef.current) return
         if (status === 'SUBSCRIBED') {
@@ -120,6 +139,36 @@ export default function DMPage() {
   }, [cid, retryKey])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  const handleReact = (msgId, emoji) => {
+    if (!user || !profile) return
+    const key = `${user.id}:${emoji}`
+    const existing = reactions[msgId]?.[key]
+
+    if (existing) {
+      // Unreact
+      setReactions(prev => {
+        const updated = { ...(prev[msgId] || {}) }
+        delete updated[key]
+        return { ...prev, [msgId]: updated }
+      })
+      channelRef.current?.send({
+        type: 'broadcast', event: 'unreact_dm',
+        payload: { msgId, key }
+      })
+    } else {
+      // React
+      const reaction = { emoji, user_id: user.id, username: profile.username }
+      setReactions(prev => ({
+        ...prev,
+        [msgId]: { ...(prev[msgId] || {}), [key]: reaction }
+      }))
+      channelRef.current?.send({
+        type: 'broadcast', event: 'react_dm',
+        payload: { msgId, key, ...reaction }
+      })
+    }
+  }
 
   const sendDM = async (content) => {
     if (!content.trim() || !user || !profile || !dmUser || !cid) return
@@ -220,9 +269,10 @@ export default function DMPage() {
           <MessageBubble
             key={msg.id}
             message={{ ...msg, user_id: msg.sender_id, username: msg.sender_username }}
-            reactions={{}}
+            reactions={reactions[msg.id] || {}}
             onReply={setReplyingTo}
             onDelete={handleDelete}
+            onReact={handleReact}
             onReport={setReportMsg}
           />
         ))}
