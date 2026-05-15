@@ -12,7 +12,7 @@ import ProfilePage from './pages/ProfilePage'
 import CollectionsPage from './pages/CollectionsPage'
 
 export default function App() {
-  const { user, loading, init } = useAuthStore()
+  const { user, profile, loading, init } = useAuthStore()
   const { view, setCurrentUserId, addUnreadDM } = useAppStore()
   const notifChannelRef = useRef(null)
   const reloadTimerRef  = useRef(null)
@@ -96,6 +96,26 @@ export default function App() {
   }
 
   if (!user) return <AuthPage />
+
+  // ── Banned screen ─────────────────────────────────────────
+  if (profile?.is_banned) {
+    return (
+      <div className="app-shell" style={{ alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ textAlign: 'center', maxWidth: 260 }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🚫</div>
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, color: 'var(--text)' }}>Account Banned</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 16 }}>
+            Your account has been banned from Ningi.
+            {profile.ban_reason ? ` Reason: ${profile.ban_reason}.` : ''}
+          </div>
+          <button
+            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 16px', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer' }}
+            onClick={() => useAuthStore.getState().signOut()}
+          >Sign out</button>
+        </div>
+      </div>
+    )
+  }
 
   // ── Reconnecting overlay (shown over everything) ─────────────
   if (reconnecting) {

@@ -1966,3 +1966,18 @@ input, textarea, button, select { font-family: inherit; }
 }
 .report-modal__success-title { font-size: 16px; font-weight: 600; color: var(--text, #fff); margin: 0; }
 .report-modal__success-text { font-size: 13px; color: var(--text-secondary, #aaa); margin: 0; line-height: 1.5; }
+
+/* ── Timeout banner ──────────────────────────────────────── */
+.timeout-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(245,158,11,0.08);
+  border-top: 1px solid rgba(245,158,11,0.2);
+  font-size: 12px;
+  color: #f59e0b;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+.timeout-banner strong { font-weight: 600; color: #fbbf24; }

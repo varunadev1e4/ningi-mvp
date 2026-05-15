@@ -52,6 +52,15 @@ export const useAuthStore = create((set, get) => ({
     return data ?? null
   },
 
+  /** Re-fetch profile from DB and update store — use before sending messages */
+  refreshProfile: async () => {
+    const user = get().user
+    if (!user) return null
+    const profile = await get()._fetchProfile(user.id)
+    if (profile) set({ profile })
+    return profile
+  },
+
   /** Fetch profile, creating it if it doesn't exist yet */
   _loadProfile: async (user) => {
     let profile = await get()._fetchProfile(user.id)

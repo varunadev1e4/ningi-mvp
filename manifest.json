@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Ningi",
   "short_name": "Ningi",
-  "version": "1.2.2",
+  "version": "1.0.0",
   "description": "Real-time chat on every URL",
   "permissions": [
     "sidePanel",

@@ -23,6 +23,7 @@ export default function ChatPage() {
   const [modError, setModError]       = useState(null)
   const [reportMsg, setReportMsg]     = useState(null)  // message being reported
 
+  const [timeoutInfo, setTimeoutInfo] = useState(null)  // { until, reason }
   const bottomRef  = useRef(null)
   const channelRef = useRef(null)
   const mountedRef = useRef(true)
@@ -169,6 +170,25 @@ export default function ChatPage() {
     if (!content.trim() || !currentUrl || !user || !profile) return
 
     setModError(null)
+
+    // ── Moderation check — direct DB query, cannot be bypassed ──
+    const { data: modStatus } = await supabase
+      .from('profiles')
+      .select('is_banned, timeout_until, timeout_reason')
+      .eq('id', user.id)
+      .single()
+
+    if (modStatus?.is_banned) {
+      setModError('Your account has been banned.')
+      return
+    }
+    if (modStatus?.timeout_until && new Date(modStatus.timeout_until) > new Date()) {
+      setTimeoutInfo({ until: new Date(modStatus.timeout_until), reason: modStatus.timeout_reason || '' })
+      return
+    } else {
+      setTimeoutInfo(null)
+    }
+
     const blocked = moderate(content)
     if (blocked) { setModError(blocked); return }
 
@@ -303,14 +323,20 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      {modError && (
+      {timeoutInfo && (
+        <div className="timeout-banner">
+          <span>⏸</span>
+          <span>You are timed out until <strong>{timeoutInfo.until.toLocaleString()}</strong>{timeoutInfo.reason ? `. Reason: ${timeoutInfo.reason}` : ''}.</span>
+        </div>
+      )}
+      {modError && !timeoutInfo && (
         <div className="mod-error-banner">
           <span>🚫 {modError}</span>
           <button onClick={() => setModError(null)}>✕</button>
         </div>
       )}
       <ReplyBar replyingTo={replyingTo} onCancel={() => setReplyingTo(null)} />
-      <MessageInput onSend={sendMessage} disabled={!hasRoom || !!error} />
+      <MessageInput onSend={sendMessage} disabled={!hasRoom || !!error || !!timeoutInfo} />
       <ReportModal
         open={Boolean(reportMsg)}
         onClose={() => setReportMsg(null)}
