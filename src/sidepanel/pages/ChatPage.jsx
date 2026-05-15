@@ -8,6 +8,7 @@ import UrlDropdown from '../components/UrlDropdown'
 import MessageBubble from '../components/MessageBubble'
 import MessageInput from '../components/MessageInput'
 import ReplyBar from '../components/ReplyBar'
+import ReportModal from '../components/ReportModal'
 
 export default function ChatPage() {
   const { user, profile } = useAuthStore()
@@ -20,6 +21,7 @@ export default function ChatPage() {
   const [error, setError]           = useState(null)
   const [retryKey, setRetryKey]     = useState(0)
   const [modError, setModError]       = useState(null)
+  const [reportMsg, setReportMsg]     = useState(null)  // message being reported
 
   const bottomRef  = useRef(null)
   const channelRef = useRef(null)
@@ -295,6 +297,7 @@ export default function ChatPage() {
             onReply={setReplyingTo}
             onDelete={handleDelete}
             onReact={handleReact}
+            onReport={setReportMsg}
           />
         ))}
         <div ref={bottomRef} />
@@ -308,6 +311,15 @@ export default function ChatPage() {
       )}
       <ReplyBar replyingTo={replyingTo} onCancel={() => setReplyingTo(null)} />
       <MessageInput onSend={sendMessage} disabled={!hasRoom || !!error} />
+      <ReportModal
+        open={Boolean(reportMsg)}
+        onClose={() => setReportMsg(null)}
+        type="message"
+        targetId={reportMsg?.id}
+        targetName={reportMsg?.username}
+        messageSnippet={reportMsg?.content?.slice(0, 120)}
+        contextUrl={currentUrl}
+      />
     </>
   )
 }

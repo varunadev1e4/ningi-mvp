@@ -9,6 +9,7 @@ import DMPage from './pages/DMPage'
 import InboxPage from './pages/InboxPage'
 import FeedbackPage from './pages/FeedbackPage'
 import ProfilePage from './pages/ProfilePage'
+import CollectionsPage from './pages/CollectionsPage'
 
 export default function App() {
   const { user, loading, init } = useAuthStore()
@@ -111,11 +112,12 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {view === 'chat'     && <ChatPage />}
-      {view === 'dm'       && <DMPage />}
-      {view === 'inbox'    && <InboxPage />}
-      {view === 'feedback' && <FeedbackPage />}
-      {view === 'profile'  && <ProfilePage />}
+      {view === 'chat'        && <ChatPage />}
+      {view === 'dm'          && <DMPage />}
+      {view === 'inbox'       && <InboxPage />}
+      {view === 'feedback'    && <FeedbackPage />}
+      {view === 'profile'     && <ProfilePage />}
+      {view === 'collections' && <CollectionsPage />}
     </div>
   )
 }

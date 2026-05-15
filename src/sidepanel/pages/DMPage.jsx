@@ -7,6 +7,7 @@ import UserAvatar from '../components/UserAvatar'
 import MessageBubble from '../components/MessageBubble'
 import MessageInput from '../components/MessageInput'
 import ReplyBar from '../components/ReplyBar'
+import ReportModal from '../components/ReportModal'
 
 function convId(a, b) { return [a, b].sort().join(':') }
 
@@ -20,6 +21,7 @@ export default function DMPage() {
   const [error, setError]           = useState(null)
   const [retryKey, setRetryKey]     = useState(0)
   const [modError, setModError]       = useState(null)
+  const [reportMsg, setReportMsg]     = useState(null)
 
   const bottomRef  = useRef(null)
   const channelRef = useRef(null)
@@ -201,6 +203,7 @@ export default function DMPage() {
             reactions={{}}
             onReply={setReplyingTo}
             onDelete={handleDelete}
+            onReport={setReportMsg}
           />
         ))}
         <div ref={bottomRef} />
@@ -214,6 +217,14 @@ export default function DMPage() {
       )}
       <ReplyBar replyingTo={replyingTo} onCancel={() => setReplyingTo(null)} />
       <MessageInput onSend={sendDM} disabled={!!error} placeholder={`Message ${dmUser?.username}…`} />
+      <ReportModal
+        open={Boolean(reportMsg)}
+        onClose={() => setReportMsg(null)}
+        type="message"
+        targetId={reportMsg?.id}
+        targetName={reportMsg?.username || reportMsg?.sender_username}
+        messageSnippet={reportMsg?.content?.slice(0, 120)}
+      />
     </>
   )
 }

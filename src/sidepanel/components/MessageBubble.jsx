@@ -15,7 +15,7 @@ function truncate(str, n) {
   return str.length > n ? str.slice(0, n) + '…' : str
 }
 
-export default function MessageBubble({ message, reactions = {}, onReply, onDelete, onReact }) {
+export default function MessageBubble({ message, reactions = {}, onReply, onDelete, onReact, onReport }) {
   const { user } = useAuthStore()
   const { openProfile } = useAppStore()
   const [hovered, setHovered] = useState(false)
@@ -82,7 +82,7 @@ export default function MessageBubble({ message, reactions = {}, onReply, onDele
           {message.content}
         </div>
 
-        {/* Inline action bar — slides in below bubble on hover, no absolute positioning */}
+        {/* Inline action bar */}
         <div className={`msg-action-row${hovered ? ' visible' : ''}${isOwn ? ' own' : ''}`}>
           {/* Quick emoji reactions */}
           {QUICK_EMOJIS.map((emoji) => (
@@ -107,6 +107,17 @@ export default function MessageBubble({ message, reactions = {}, onReply, onDele
             ↩
           </button>
 
+          {/* Report (other people's messages only) */}
+          {!isOwn && (
+            <button
+              className="msg-action-btn"
+              onMouseDown={(e) => { e.preventDefault(); onReport?.(message) }}
+              title="Report message"
+            >
+              ⚑
+            </button>
+          )}
+
           {/* Delete (own messages only) */}
           {isOwn && (
             <button
@@ -119,7 +130,7 @@ export default function MessageBubble({ message, reactions = {}, onReply, onDele
           )}
         </div>
 
-        {/* Reaction chips — always visible when reactions exist */}
+        {/* Reaction chips */}
         {Object.keys(reactionGroups).length > 0 && (
           <div className={`reactions-row${isOwn ? ' own' : ''}`}>
             {Object.entries(reactionGroups).map(([emoji, rs]) => (
