@@ -13,6 +13,7 @@ import ProfilePage from './pages/ProfilePage'
 import CollectionsPage from './pages/CollectionsPage'
 import GroupsListPage from './pages/GroupsListPage'
 import GroupPage from './pages/GroupPage'
+import NotificationsPage from './pages/NotificationsPage'
 
 export default function App() {
   const { user, profile, loading, init } = useAuthStore()
@@ -143,7 +144,8 @@ export default function App() {
       {view === 'profile'     && <ProfilePage />}
       {view === 'collections' && <CollectionsPage />}
       {view === 'groups'      && <GroupsListPage />}
-      {view === 'group-chat'  && <GroupPage />}
+      {view === 'group-chat'     && <GroupPage />}
+      {view === 'notifications'  && <NotificationsPage />}
     </div>
   )
 }

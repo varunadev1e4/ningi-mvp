@@ -8,6 +8,7 @@ import MessageBubble from '../components/MessageBubble'
 import MessageInput from '../components/MessageInput'
 import ReplyBar from '../components/ReplyBar'
 import ReportModal from '../components/ReportModal'
+import { useTyping } from '../hooks/useTyping'
 
 function convId(a, b) { return [a, b].sort().join(':') }
 
@@ -28,6 +29,8 @@ export default function DMPage() {
   const bottomRef  = useRef(null)
   const channelRef = useRef(null)
   const mountedRef = useRef(true)
+  const [activeChannel, setActiveChannel] = useState(null)
+  const { typingLabel, onTyping } = useTyping(activeChannel, profile?.username)
   const cid = user && dmUser ? convId(user.id, dmUser.id) : null
 
   useEffect(() => {
@@ -279,6 +282,9 @@ export default function DMPage() {
         <div ref={bottomRef} />
       </div>
 
+      {typingLabel && (
+        <div className="typing-indicator">{typingLabel}</div>
+      )}
       {timeoutInfo && (
         <div className="timeout-banner">
           <span>⏸</span>
@@ -292,7 +298,7 @@ export default function DMPage() {
         </div>
       )}
       <ReplyBar replyingTo={replyingTo} onCancel={() => setReplyingTo(null)} />
-      <MessageInput onSend={sendDM} disabled={!!error || !!timeoutInfo} placeholder={`Message ${dmUser?.username}…`} />
+      <MessageInput onSend={sendDM} disabled={!!error || !!timeoutInfo} placeholder={`Message ${dmUser?.username}…`} onTyping={onTyping} mentionUsernames={dmUser?.username ? [dmUser.username] : []} />
       <ReportModal
         open={Boolean(reportMsg)}
         onClose={() => setReportMsg(null)}

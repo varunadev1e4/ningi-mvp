@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const [retryKey, setRetryKey]     = useState(0)
   const [editing, setEditing]       = useState(false)
   const [course, setCourse]         = useState('')
+  const [bio, setBio]               = useState('')
   const [saving, setSaving]         = useState(false)
   const [saveMsg, setSaveMsg]       = useState('')
   const [reportOpen, setReportOpen] = useState(false)
@@ -51,6 +52,7 @@ export default function ProfilePage() {
         if (cancelled) return
         setProfile(result.data)
         setCourse(result.data?.course || '')
+        setBio(result.data?.bio || '')
         setLoading(false)
         window.dispatchEvent(new CustomEvent('ningi:healthy'))
       } catch {
@@ -72,10 +74,10 @@ export default function ProfilePage() {
   const handleSave = async () => {
     if (!user) return
     setSaving(true)
-    const { error } = await supabase.from('profiles').update({ course: course.trim() }).eq('id', user.id)
+    const { error } = await supabase.from('profiles').update({ course: course.trim(), bio: bio.trim() }).eq('id', user.id)
     setSaving(false)
     if (!error) {
-      setProfile(p => ({ ...p, course: course.trim() }))
+      setProfile(p => ({ ...p, course: course.trim(), bio: bio.trim() }))
       setSaveMsg('Saved!')
       setEditing(false)
       setTimeout(() => setSaveMsg(''), 2000)
@@ -163,6 +165,7 @@ export default function ProfilePage() {
               {profile?.course && !editing && (
                 <div className="profile-course-badge">{profile.course}</div>
               )}
+              {profile?.bio && <p className="profile-bio">{profile.bio}</p>}
               <div className="profile-joined">Joined {joinedDate(profile?.created_at)}</div>
             </div>
 
@@ -289,6 +292,17 @@ export default function ProfilePage() {
                 <input className="auth-input" type="text" placeholder="e.g. BCA, MCA, B.Ed, MBA…"
                   value={course} onChange={e => setCourse(e.target.value)} maxLength={60} />
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Helps others find students in the same course</div>
+                <div className="fb-label" style={{ marginTop: 12, marginBottom: 6 }}>Bio</div>
+                <textarea
+                  className="auth-input"
+                  placeholder="Tell others a bit about yourself… (optional)"
+                  value={bio}
+                  onChange={e => setBio(e.target.value)}
+                  maxLength={160}
+                  rows={3}
+                  style={{ resize: 'none' }}
+                />
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, textAlign: 'right' }}>{bio.length}/160</div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                   <button className="profile-dm-btn" style={{ flex: 1 }} onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
                   <button className="profile-edit-btn" style={{ flex: 1 }} onClick={() => { setEditing(false); setCourse(profile?.course || '') }}>Cancel</button>
@@ -298,6 +312,12 @@ export default function ProfilePage() {
 
             {/* ── Info card ── */}
             <div className="profile-card">
+              {profile?.bio && (
+                <div className="profile-row">
+                  <span className="profile-row-label">Bio</span>
+                  <span className="profile-row-val" style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{profile.bio}</span>
+                </div>
+              )}
               <div className="profile-row">
                 <span className="profile-row-label">Username</span>
                 <span className="profile-row-val">@{profile?.username}</span>

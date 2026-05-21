@@ -2750,3 +2750,265 @@ html.light .settings-toggle--off {
 .friend-req-reject-btn:hover { border-color: var(--border-hover); color: var(--text); }
 .friend-req-accept-btn:disabled,
 .friend-req-reject-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ═══════════════════════════════════════════════════
+   NEW FEATURES CSS
+═══════════════════════════════════════════════════ */
+
+/* ── Presence dot ── */
+.presence-dot {
+  position: absolute;
+  background: #22c55e;
+  border: 2px solid var(--bg);
+  pointer-events: none;
+}
+html.dark .presence-dot { border-color: var(--bg); }
+
+/* ── Typing indicator ── */
+.typing-indicator {
+  padding: 4px 14px 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  flex-shrink: 0;
+  animation: typing-fade 0.5s ease;
+}
+@keyframes typing-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ── Message seen receipt ── */
+.msg-seen {
+  font-size: 10px;
+  color: var(--sky);
+  text-align: right;
+  margin-top: 2px;
+  padding-right: 2px;
+}
+
+/* ── Copy feedback in action bar ── */
+.msg-action-btn { min-width: 22px; }
+
+/* ── @mention highlight in bubbles ── */
+.msg-mention {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--primary-dim);
+  border-radius: 4px;
+  padding: 0 3px;
+}
+
+/* ── @mention autocomplete dropdown ── */
+.mention-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 14px; right: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  z-index: 50;
+  margin-bottom: 4px;
+}
+.mention-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+}
+.mention-item:hover, .mention-item.active { background: var(--primary-dim); color: var(--primary); }
+.mention-item-at { color: var(--primary); font-weight: 700; }
+
+/* ── Message search ── */
+.url-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.url-search-row .url-bar { flex: 1; }
+.search-toggle-btn {
+  width: 36px; height: 36px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+.search-toggle-btn:hover, .search-toggle-btn.active { color: var(--primary); background: var(--primary-dim); }
+
+.chat-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.chat-search-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.chat-search-input:focus { border-color: var(--primary); }
+.chat-search-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 15px;
+  padding: 2px 4px; border-radius: 6px;
+  transition: color 0.12s;
+}
+.chat-search-close:hover { color: var(--text); }
+
+/* ── Online count pill in URL bar ── */
+.url-online-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: rgba(34,197,94,0.12);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #22c55e;
+  flex-shrink: 0;
+}
+.url-online-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+
+/* ── Room history section label ── */
+.url-dropdown-section-label {
+  padding: 6px 12px 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.url-dropdown-item--recent { opacity: 0.75; }
+.url-dropdown-item--recent:hover { opacity: 1; }
+
+/* ── Notifications ── */
+.notif-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.notif-row:hover { background: var(--surface); }
+.notif-row--unread { background: rgba(255,61,0,0.03); }
+.notif-icon-wrap {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.notif-info { flex: 1; min-width: 0; }
+.notif-actor { font-size: 13px; font-weight: 700; color: var(--text); }
+.notif-text  { font-size: 13px; color: var(--text-soft); }
+.notif-preview {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-style: italic;
+}
+.notif-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.notif-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+/* ── Profile bio ── */
+.profile-bio {
+  font-size: 13px;
+  color: var(--text-soft);
+  text-align: center;
+  margin: 4px 0 0;
+  padding: 0 16px;
+  line-height: 1.5;
+}
+
+/* ── Group invite button ── */
+.group-invite-btn {
+  width: 100%; padding: 8px;
+  background: var(--primary-dim);
+  border: 1px solid rgba(255,61,0,0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 12px; font-weight: 600;
+  font-family: inherit;
+  margin-bottom: 8px;
+  transition: background 0.12s;
+}
+.group-invite-btn:hover { background: rgba(255,61,0,0.15); }
+
+/* ── Group muted badge ── */
+.group-muted-badge {
+  padding: 1px 5px; border-radius: 4px;
+  background: rgba(245,158,11,0.12); color: #f59e0b;
+  font-size: 10px; font-weight: 700;
+}
+
+/* ── Member role actions ── */
+.member-actions { display: flex; gap: 3px; margin-left: auto; }
+.member-action-btn {
+  width: 22px; height: 22px;
+  background: var(--surface2); border: none;
+  border-radius: 5px; cursor: pointer;
+  color: var(--text-muted); font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.member-action-btn:hover { background: var(--surface3); color: var(--text); }
+
+/* ── Join by invite code ── */
+.join-by-code-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.join-code-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  font-family: var(--mono, monospace);
+  transition: border-color 0.15s;
+}
+.join-code-input:focus { border-color: var(--primary); }

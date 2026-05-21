@@ -7,11 +7,12 @@ import { moderate } from '../lib/moderation'
 import MessageBubble from '../components/MessageBubble'
 import MessageInput from '../components/MessageInput'
 import ReplyBar from '../components/ReplyBar'
+import { useTyping } from '../hooks/useTyping'
 
 export default function GroupPage() {
   const { user, profile } = useAuthStore()
   const { currentGroup, closeGroup } = useAppStore()
-  const { leaveGroup, myGroups } = useGroupsStore()
+  const { leaveGroup } = useGroupsStore()
 
   const [messages, setMessages]   = useState([])
   const [reactions, setReactions] = useState({})
@@ -21,14 +22,18 @@ export default function GroupPage() {
   const [modError, setModError]   = useState(null)
   const [members, setMembers]     = useState([])
   const [showInfo, setShowInfo]   = useState(false)
+  const [inviteCopied, setInviteCopied] = useState(false)
+  const [mutingId, setMutingId] = useState(null)
 
   const bottomRef  = useRef(null)
   const channelRef = useRef(null)
   const mountedRef = useRef(true)
+  const [activeChannel, setActiveChannel] = useState(null)
   const group = currentGroup
+  const { typingLabel, onTyping } = useTyping(activeChannel, profile?.username)
 
-  const myMembership = myGroups.find(g => g.id === group?.id)
-  const isAdmin = myMembership?.myRole === 'admin'
+  const myMembership = members.find(m => m.user_id === user?.id)
+  const isAdmin = myMembership?.role === 'admin'
 
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false } }, [])
 
@@ -73,7 +78,8 @@ export default function GroupPage() {
       .subscribe()
 
     channelRef.current = channel
-    return () => { supabase.removeChannel(channel); channelRef.current = null }
+    setActiveChannel(channel)
+    return () => { supabase.removeChannel(channel); channelRef.current = null; setActiveChannel(null) }
   }, [group?.id])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
@@ -94,9 +100,44 @@ export default function GroupPage() {
   const fetchMembers = async () => {
     const { data } = await supabase
       .from('group_members')
-      .select('user_id, role, profiles(username)')
+      .select('user_id, role, muted_until, profiles(username)')
       .eq('group_id', group.id)
     setMembers(data || [])
+  }
+
+  const handleCopyInvite = async () => {
+    const { data } = await supabase.from('groups').select('invite_token').eq('id', group.id).single()
+    const code = data?.invite_token || group.id
+    await navigator.clipboard.writeText(code)
+    setInviteCopied(true)
+    setTimeout(() => setInviteCopied(false), 2000)
+  }
+
+  const handlePromote = async (userId) => {
+    const { error } = await supabase.rpc('set_group_member_role', {
+      p_group_id: group.id, p_user_id: userId, p_role: 'admin'
+    })
+    if (error) { setModError('Could not promote: ' + error.message); return }
+    fetchMembers()
+  }
+
+  const handleDemote = async (userId) => {
+    const { error } = await supabase.rpc('set_group_member_role', {
+      p_group_id: group.id, p_user_id: userId, p_role: 'member'
+    })
+    if (error) { setModError('Could not demote: ' + error.message); return }
+    fetchMembers()
+  }
+
+  const handleMute = async (userId, hours) => {
+    setMutingId(userId)
+    const until = hours ? new Date(Date.now() + hours * 3600000).toISOString() : null
+    const { error } = await supabase.rpc('set_group_member_mute', {
+      p_group_id: group.id, p_user_id: userId, p_muted_until: until
+    })
+    if (error) { setModError('Could not mute: ' + error.message) }
+    else fetchMembers()
+    setMutingId(null)
   }
 
   const sendMessage = async (content) => {
@@ -109,6 +150,13 @@ export default function GroupPage() {
     if (modStatus?.is_banned) { setModError('Your account has been banned.'); return }
     if (modStatus?.timeout_until && new Date(modStatus.timeout_until) > new Date()) {
       setModError(`You are timed out until ${new Date(modStatus.timeout_until).toLocaleString()}.`); return
+    }
+
+    // Check mute status
+    const { data: membership } = await supabase
+      .from('group_members').select('muted_until').eq('group_id', group.id).eq('user_id', user.id).single()
+    if (membership?.muted_until && new Date(membership.muted_until) > new Date()) {
+      setModError(`You are muted until ${new Date(membership.muted_until).toLocaleString()}.`); return
     }
 
     const blocked = moderate(content)
@@ -188,16 +236,36 @@ export default function GroupPage() {
           {group.description && <p className="group-info-desc">{group.description}</p>}
           <div className="group-info-members-label">Members ({members.length})</div>
           <div className="group-info-members">
-            {members.map(m => (
-              <div key={m.user_id} className="group-info-member">
-                <div className="group-info-member-avatar" style={{ background: group.avatar_color || '#06558D' }}>
-                  {(m.profiles?.username || '?')[0].toUpperCase()}
+            {members.map(m => {
+              const isSelf  = m.user_id === user?.id
+              const isMuted = m.muted_until && new Date(m.muted_until) > new Date()
+              return (
+                <div key={m.user_id} className="group-info-member">
+                  <div className="group-info-member-avatar" style={{ background: group.avatar_color || '#06558D' }}>
+                    {(m.profiles?.username || '?')[0].toUpperCase()}
+                  </div>
+                  <span className="group-info-member-name">@{m.profiles?.username}</span>
+                  {m.role === 'admin' && <span className="group-admin-badge">Admin</span>}
+                  {isMuted && <span className="group-muted-badge">Muted</span>}
+                  {isAdmin && !isSelf && (
+                    <div className="member-actions">
+                      {m.role !== 'admin'
+                        ? <button className="member-action-btn" onClick={() => handlePromote(m.user_id)} title="Make admin">⬆</button>
+                        : <button className="member-action-btn" onClick={() => handleDemote(m.user_id)} title="Remove admin">⬇</button>
+                      }
+                      {!isMuted
+                        ? <button className="member-action-btn" onClick={() => handleMute(m.user_id, 24)} disabled={mutingId === m.user_id} title="Mute 24h">🔇</button>
+                        : <button className="member-action-btn" onClick={() => handleMute(m.user_id, null)} disabled={mutingId === m.user_id} title="Unmute">🔊</button>
+                      }
+                    </div>
+                  )}
                 </div>
-                <span className="group-info-member-name">@{m.profiles?.username}</span>
-                {m.role === 'admin' && <span className="group-admin-badge">Admin</span>}
-              </div>
-            ))}
+              )
+            })}
           </div>
+          <button className="group-invite-btn" onClick={handleCopyInvite}>
+            {inviteCopied ? '✓ Code copied!' : '🔗 Copy invite code'}
+          </button>
           <button className="group-leave-btn" onClick={handleLeave}>Leave Group</button>
         </div>
       )}
@@ -233,8 +301,9 @@ export default function GroupPage() {
           <button onClick={() => setModError(null)}>✕</button>
         </div>
       )}
+      {typingLabel && <div className="typing-indicator">{typingLabel}</div>}
       <ReplyBar replyingTo={replyingTo} onCancel={() => setReplyTo(null)} />
-      <MessageInput onSend={sendMessage} disabled={!!error} placeholder={`Message ${group.name}…`} />
+      <MessageInput onSend={sendMessage} disabled={!!error} placeholder={`Message ${group.name}…`} onTyping={onTyping} />
     </>
   )
 }

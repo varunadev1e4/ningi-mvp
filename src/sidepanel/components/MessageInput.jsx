@@ -1,29 +1,76 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
-export default function MessageInput({ onSend, disabled, placeholder = 'Message this room…' }) {
-  const [text, setText] = useState('')
+/**
+ * MessageInput
+ * @param {function}  onSend
+ * @param {boolean}   disabled
+ * @param {string}    placeholder
+ * @param {function}  onTyping          — called on every keystroke (for typing indicator)
+ * @param {string[]}  mentionUsernames  — list of usernames to suggest on @
+ */
+export default function MessageInput({
+  onSend,
+  disabled,
+  placeholder = 'Message this room…',
+  onTyping,
+  mentionUsernames = [],
+}) {
+  const [text, setText]                   = useState('')
+  const [suggestions, setSuggestions]     = useState([])
+  const [suggestionIdx, setSuggestionIdx] = useState(0)
   const textareaRef = useRef(null)
 
+  // ── @mention detection ───────────────────────────────────
+  useEffect(() => {
+    const lastWord = text.split(/\s/).pop() || ''
+    if (lastWord.startsWith('@') && lastWord.length > 1) {
+      const query = lastWord.slice(1).toLowerCase()
+      const matches = mentionUsernames
+        .filter(u => u.toLowerCase().startsWith(query))
+        .slice(0, 5)
+      setSuggestions(matches)
+      setSuggestionIdx(0)
+    } else {
+      setSuggestions([])
+    }
+  }, [text, mentionUsernames.join(',')])
+
+  const insertMention = (username) => {
+    const words = text.split(/(\s)/)
+    words[words.length - 1] = `@${username} `
+    setText(words.join(''))
+    setSuggestions([])
+    textareaRef.current?.focus()
+  }
+
+  // ── Send ─────────────────────────────────────────────────
   const send = () => {
     const trimmed = text.trim()
     if (!trimmed || disabled) return
     onSend(trimmed)
     setText('')
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-    }
+    setSuggestions([])
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
   }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      send()
+    if (suggestions.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setSuggestionIdx(i => Math.min(i + 1, suggestions.length - 1)); return }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); setSuggestionIdx(i => Math.max(i - 1, 0)); return }
+      if (e.key === 'Tab' || e.key === 'Enter') {
+        if (e.key === 'Enter') e.preventDefault()
+        insertMention(suggestions[suggestionIdx])
+        return
+      }
+      if (e.key === 'Escape') { setSuggestions([]); return }
     }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
   const handleChange = (e) => {
     setText(e.target.value)
-    // Auto-grow textarea
+    onTyping?.()
     const el = e.target
     el.style.height = 'auto'
     el.style.height = Math.min(el.scrollHeight, 100) + 'px'
@@ -38,7 +85,22 @@ export default function MessageInput({ onSend, disabled, placeholder = 'Message 
   }
 
   return (
-    <div className="input-area">
+    <div className="input-area" style={{ position: 'relative' }}>
+      {/* @mention autocomplete dropdown */}
+      {suggestions.length > 0 && (
+        <div className="mention-dropdown">
+          {suggestions.map((u, i) => (
+            <button
+              key={u}
+              className={`mention-item${i === suggestionIdx ? ' active' : ''}`}
+              onMouseDown={e => { e.preventDefault(); insertMention(u) }}
+            >
+              <span className="mention-item-at">@</span>{u}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="input-wrap">
         <textarea
           ref={textareaRef}
@@ -58,7 +120,7 @@ export default function MessageInput({ onSend, disabled, placeholder = 'Message 
           ➤
         </button>
       </div>
-      <div className="input-hint">Enter to send · Shift+Enter for new line</div>
+      <div className="input-hint">Enter to send · Shift+Enter for new line · @ to mention</div>
     </div>
   )
 }

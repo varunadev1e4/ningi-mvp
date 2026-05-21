@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 export const useAppStore = create((set, get) => ({
-  view: 'chat',   // 'chat'|'dm'|'inbox'|'feedback'|'profile'|'collections'|'groups'|'group-chat'
+  view: 'chat',   // 'chat'|'dm'|'inbox'|'feedback'|'profile'|'collections'|'groups'|'group-chat'|'notifications'
   dmUser: null,
   profileUser: null,
   currentGroup: null,
@@ -31,7 +31,8 @@ export const useAppStore = create((set, get) => ({
   closeInbox:    () => set({ view: 'chat' }),
   openFeedback:  () => set({ view: 'feedback' }),
   closeFeedback: () => set({ view: 'chat' }),
-  openGroups:    () => set({ view: 'groups', currentGroup: null }),
+  openGroups:         () => set({ view: 'groups', currentGroup: null }),
+  openNotifications:  () => set({ view: 'notifications' }),
   openGroup:     (group) => set({ view: 'group-chat', currentGroup: group }),
   closeGroup:    () => set({ view: 'groups', currentGroup: null }),
 

@@ -9,6 +9,9 @@ import MessageBubble from '../components/MessageBubble'
 import MessageInput from '../components/MessageInput'
 import ReplyBar from '../components/ReplyBar'
 import ReportModal from '../components/ReportModal'
+import { usePresence } from '../hooks/usePresence'
+import { useTyping } from '../hooks/useTyping'
+import { useNotificationsStore } from '../stores/notificationsStore'
 
 export default function ChatPage() {
   const { user, profile } = useAuthStore()
@@ -23,10 +26,13 @@ export default function ChatPage() {
   const [modError, setModError]       = useState(null)
   const [reportMsg, setReportMsg]     = useState(null)  // message being reported
 
-  const [timeoutInfo, setTimeoutInfo] = useState(null)  // { until, reason }
-  const bottomRef  = useRef(null)
-  const channelRef = useRef(null)
-  const mountedRef = useRef(true)
+  const [timeoutInfo, setTimeoutInfo] = useState(null)
+  const [searchOpen, setSearchOpen]   = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const bottomRef     = useRef(null)
+  const channelRef    = useRef(null)
+  const mountedRef    = useRef(true)
+  const [activeChannel, setActiveChannel] = useState(null)
 
   useEffect(() => {
     mountedRef.current = true
@@ -192,6 +198,27 @@ export default function ChatPage() {
     const blocked = moderate(content)
     if (blocked) { setModError(blocked); return }
 
+    // Detect @mentions and create notifications
+    const mentionPattern = /@(\w+)/g
+    let match
+    const mentionedUsernames = []
+    while ((match = mentionPattern.exec(content)) !== null) {
+      mentionedUsernames.push(match[1])
+    }
+    if (mentionedUsernames.length > 0) {
+      // Resolve usernames to IDs and create notifications
+      supabase.from('profiles').select('id, username').in('username', mentionedUsernames).then(({ data: mentioned }) => {
+        const { createNotification } = useNotificationsStore.getState()
+        ;(mentioned || []).forEach(m => {
+          createNotification({
+            userId: m.id, type: 'mention',
+            actorId: user.id, actorUsername: profile.username,
+            data: { room_url: currentUrl, message_preview: content.slice(0, 80) }
+          })
+        })
+      })
+    }
+
     const { data, error: e } = await supabase
       .from('messages')
       .insert({
@@ -239,12 +266,28 @@ export default function ChatPage() {
     channelRef.current?.send({ type: 'broadcast', event: 'reaction_update', payload: { message_id: msgId, reactions: updated } })
   }
 
+  // Presence + typing — use activeChannel (state) so hooks re-run when channel connects
+  const { onlineUsers, onlineCount, isOnline } = usePresence(activeChannel, user, profile)
+  const { typingLabel, onTyping } = useTyping(activeChannel, profile?.username)
+
   const hasRoom = Boolean(currentUrl)
+  const mentionUsernames = onlineUsers.map(u => u.username).filter(u => u !== profile?.username)
 
   return (
     <>
       <Header />
-      <UrlDropdown />
+      <div className="url-search-row">
+        <UrlDropdown onlineCount={onlineCount} />
+        <button
+          className={`search-toggle-btn${searchOpen ? ' active' : ''}`}
+          onClick={() => { setSearchOpen(v => !v); setSearchQuery('') }}
+          title="Search messages"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+      </div>
 
       {currentUrl && (
         <div className="room-label">
@@ -309,7 +352,10 @@ export default function ChatPage() {
           </div>
         )}
 
-        {messages.map((msg) => (
+        {(searchQuery
+          ? messages.filter(m => m.content?.toLowerCase().includes(searchQuery.toLowerCase()))
+          : messages
+        ).map((msg) => (
           <MessageBubble
             key={msg.id}
             message={msg}
@@ -318,8 +364,12 @@ export default function ChatPage() {
             onDelete={handleDelete}
             onReact={handleReact}
             onReport={setReportMsg}
+            isOnline={isOnline(msg.user_id)}
           />
         ))}
+        {searchQuery && messages.filter(m => m.content?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px', fontSize: 13 }}>No messages match "{searchQuery}"</div>
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -329,6 +379,25 @@ export default function ChatPage() {
           <span>You are timed out until <strong>{timeoutInfo.until.toLocaleString()}</strong>{timeoutInfo.reason ? `. Reason: ${timeoutInfo.reason}` : ''}.</span>
         </div>
       )}
+      {/* Search bar */}
+      {searchOpen && (
+        <div className="chat-search-bar">
+          <input
+            autoFocus
+            className="chat-search-input"
+            placeholder="Search messages…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <button className="chat-search-close" onClick={() => { setSearchOpen(false); setSearchQuery('') }}>✕</button>
+        </div>
+      )}
+
+      {/* Typing indicator */}
+      {typingLabel && (
+        <div className="typing-indicator">{typingLabel}</div>
+      )}
+
       {modError && !timeoutInfo && (
         <div className="mod-error-banner">
           <span>🚫 {modError}</span>
@@ -336,7 +405,7 @@ export default function ChatPage() {
         </div>
       )}
       <ReplyBar replyingTo={replyingTo} onCancel={() => setReplyingTo(null)} />
-      <MessageInput onSend={sendMessage} disabled={!hasRoom || !!error || !!timeoutInfo} />
+      <MessageInput onSend={sendMessage} disabled={!hasRoom || !!error || !!timeoutInfo} onTyping={onTyping} mentionUsernames={mentionUsernames} />
       <ReportModal
         open={Boolean(reportMsg)}
         onClose={() => setReportMsg(null)}

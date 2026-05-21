@@ -11,7 +11,10 @@ export default function GroupsListPage() {
   const { friends, fetchFriends } = useFriendsStore()
   const { myGroups, publicGroups, loading, fetchMyGroups, fetchPublicGroups, joinGroup, isMember } = useGroupsStore()
 
-  const [tab, setTab]             = useState('mine')   // 'mine' | 'discover'
+  const [tab, setTab]             = useState('mine')
+  const [inviteCode, setInviteCode] = useState('')
+  const [joinByCodeBusy, setJoinByCodeBusy] = useState(false)
+  const [codeError, setCodeError]   = useState('')
   const [showCreate, setCreate]   = useState(false)
   const [joiningId, setJoiningId] = useState(null)
 
@@ -21,6 +24,23 @@ export default function GroupsListPage() {
     fetchPublicGroups()
     fetchFriends(user.id)
   }, [user?.id])
+
+  const handleJoinByCode = async () => {
+    const code = inviteCode.trim()
+    if (!code) return
+    setJoinByCodeBusy(true); setCodeError('')
+    try {
+      const { data: group } = await (async () => {
+        const { supabase } = await import('../lib/supabase')
+        return supabase.from('groups').select('*').eq('invite_token', code).single()
+      })()
+      if (!group) { setCodeError('Invalid invite code.'); setJoinByCodeBusy(false); return }
+      if (!isMember(group.id)) await joinGroup(group.id, user.id)
+      openGroup(group)
+      setInviteCode('')
+    } catch { setCodeError('Could not join group.') }
+    setJoinByCodeBusy(false)
+  }
 
   const handleJoin = async (group) => {
     setJoiningId(group.id)
@@ -56,7 +76,24 @@ export default function GroupsListPage() {
       </div>
 
       <div className="page-scroll">
-        {loading && <div className="loading-state"><span className="loading-dot"/><span>Loading…</span></div>}
+        {/* Join by invite code */}
+      {tab === 'discover' && (
+        <div className="join-by-code-row">
+          <input
+            className="join-code-input"
+            placeholder="Paste invite code…"
+            value={inviteCode}
+            onChange={e => { setInviteCode(e.target.value); setCodeError('') }}
+            onKeyDown={e => e.key === 'Enter' && handleJoinByCode()}
+          />
+          <button className="btn-primary-sm" onClick={handleJoinByCode} disabled={!inviteCode.trim() || joinByCodeBusy}>
+            {joinByCodeBusy ? '…' : 'Join'}
+          </button>
+        </div>
+      )}
+      {codeError && <div style={{ padding: '0 14px 8px', fontSize: 12, color: 'var(--primary)' }}>{codeError}</div>}
+
+      {loading && <div className="loading-state"><span className="loading-dot"/><span>Loading…</span></div>}
 
         {!loading && displayedGroups.length === 0 && (
           <div className="empty-state">
